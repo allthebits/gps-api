@@ -38,8 +38,11 @@ app.post("/api/query/:dbname", async (req, res) => {
     return res.status(400).json({ error: "SQL query missing" });
   }
 
-  if (!sql.trim().toLowerCase().startsWith("select")) {
-    return res.status(400).json({ error: "Only SELECT queries are allowed" });
+  const normalizedSql = sql.trim().toLowerCase();
+  const forbiddenPattern = /\b(insert|update|delete|drop|alter|create|truncate|replace|grant|revoke)\b/i;
+
+  if (!normalizedSql.startsWith("select") || sql.includes(';') || forbiddenPattern.test(sql)) {
+    return res.status(400).json({ error: "Only single SELECT queries are allowed" });
   }
 
   if (!allowedDBs.includes(dbname)) {
